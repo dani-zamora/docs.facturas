@@ -1,0 +1,11 @@
+breaking:
+  label: Breaking change
+  permalink: /breaking
+
+mejora:
+  label: Mejora
+  permalink: /mejora
+
+corrección:
+  label: Corrección
+  permalink: /correccion

@@ -12,7 +12,7 @@ const config: Config = {
     v4: true,
   },
 
-  url: 'https://docs.verifactu.app',
+  url: 'https://docs.facturas.app',
   baseUrl: '/',
 
   organizationName: 'verifactu',
