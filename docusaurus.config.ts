@@ -1,7 +1,7 @@
 import {themes as prismThemes} from 'prism-react-renderer';
 import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
-import type * as Redocusaurus from 'redocusaurus';
+import type { ScalarOptions } from '@scalar/docusaurus';
 
 const config: Config = {
   title: 'Facturas API',
@@ -25,22 +25,23 @@ const config: Config = {
     locales: ['es'],
   },
 
-  presets: [
+  plugins: [
     [
-      'redocusaurus',
+      '@scalar/docusaurus',
       {
-        specs: [
-          {
-            id: 'api',
-            spec: 'static/openapi.json',
-            route: '/api-reference',
-          },
-        ],
-        theme: {
-          primaryColor: '#1a73e8',
+        label: 'Referencia API',
+        route: '/api-reference',
+        showNavLink: false,
+        configuration: {
+          spec: { url: '/openapi.json' },
+          defaultHttpClient: { targetKey: 'shell', clientKey: 'curl' },
+          hideModels: true,
         },
-      } satisfies Redocusaurus.PresetEntry,
+      } satisfies ScalarOptions,
     ],
+  ],
+
+  presets: [
     [
       'classic',
       {

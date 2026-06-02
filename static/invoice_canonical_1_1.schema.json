@@ -1,0 +1,1878 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://verifactu.local/schemas/invoice_canonical_1_1.json",
+  "title": "Canonical Invoice",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "meta",
+    "invoice"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "enum": [
+        "json_1_1"
+      ]
+    },
+    "meta": {
+      "type": "object",
+      "required": [
+        "direction",
+        "source_system"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "direction": {
+          "type": "string",
+          "enum": [
+            "issued",
+            "received"
+          ]
+        },
+        "source_system": {
+          "type": "string"
+        },
+        "batch_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "batch_item_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "original_format": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "original_document_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "external_ref": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 60,
+          "description": "Referencia externa para deduplicaciÃƒÂ³n de borradores sin nÃƒÂºmero de factura. Mapeada a Invoice.external_id en SQL."
+        },
+        "source_invoice_public_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Traza del public_id de la factura canÃƒÂ³nica origen cuando el documento recibido se transforma desde una emitida."
+        },
+        "issued_external": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "description": "Flag interno: la factura emitida fue generada fuera del sistema (importaciÃƒÂ³n externa)."
+        },
+        "recognition_status": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "recognized_pending_review",
+            "recognized_ready",
+            "recognized_rejected",
+            null
+          ],
+          "description": "Estado del reconocimiento documental. Solo presente cuando source_system='document_recognition'."
+        },
+        "recognition_score": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Score global de confianza del reconocimiento (0.0Ã¢â‚¬â€œ1.0). Solo presente cuando source_system='document_recognition'."
+        },
+        "recognition_engine": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "ocr": {
+              "type": "string",
+              "description": "Motor OCR utilizado. Ej: 'aws_textract_analyze_expense'."
+            },
+            "semantic_mapper": {
+              "type": "string",
+              "description": "Motor de normalizaciÃƒÂ³n semÃƒÂ¡ntica. Ej: 'amazon_bedrock::amazon.nova-pro-v1:0'."
+            }
+          },
+          "description": "IdentificaciÃƒÂ³n de los motores utilizados en el reconocimiento."
+        },
+        "recognition_job_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "job_public_id del job de reconocimiento para trazabilidad."
+        }
+      }
+    },
+    "recognition": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "description": "Bloque de metadatos operativos del reconocimiento documental. Solo presente cuando source_system='document_recognition'. No forma parte del dato fiscal canÃƒÂ³nico.",
+      "properties": {
+        "requires_human_review": {
+          "type": "boolean"
+        },
+        "review_reasons": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Lista de razones por las que se requiere revisiÃƒÂ³n humana. Ej: ['supplier_tax_id_missing', 'line_items_low_confidence']."
+        },
+        "field_scores": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "description": "Score de confianza por campo canÃƒÂ³nico (0.0Ã¢â‚¬â€œ1.0). Claves en notaciÃƒÂ³n dot: 'supplier.tax_id', 'header.invoice_number', etc."
+        },
+        "source_evidence": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": true,
+          "description": "Referencias al artefacto de extracciÃƒÂ³n original. Ej: {'textract_expense_index': 1}."
+        }
+      }
+    },
+    "invoice": {
+      "type": "object",
+      "required": [
+        "supplier",
+        "header",
+        "issue_data",
+        "totals",
+        "lines"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "supplier": {
+          "type": "object",
+          "required": [
+            "person_type_code",
+            "tax_id",
+            "name"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "person_type_code": {
+              "type": "string",
+              "enum": [
+                "F",
+                "J"
+              ]
+            },
+            "tax_id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string",
+              "maxLength": 120
+            },
+            "telephone": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "electronic_mail": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "contact_persons": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "electronic_address": {
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "$ref": "#/definitions/electronic_address"
+                }
+              ],
+              "description": "DirecciÃƒÂ³n electrÃƒÂ³nica interoperable de la parte."
+            },
+            "identifiers": {
+              "type": [
+                "array",
+                "null"
+              ],
+              "items": {
+                "$ref": "#/definitions/party_identifier"
+              },
+              "description": "Identificadores adicionales tipados de la parte."
+            },
+            "party_country_code": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "PaÃƒÂ­s principal de la parte, distinto del paÃƒÂ­s de una direcciÃƒÂ³n concreta."
+            },
+            "person": {
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "$ref": "#/definitions/person_party"
+                }
+              ],
+              "description": "Bloque estructurado para persona fÃƒÂ­sica."
+            },
+            "company": {
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "$ref": "#/definitions/company_party"
+                }
+              ],
+              "description": "Bloque estructurado para persona jurÃƒÂ­dica."
+            },
+            "country_code": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Código ISO 3166-1 alpha-2 del país de la parte, normalizado por el validador."
+            }
+          }
+        },
+        "customer": {
+          "type": "object",
+          "required": [
+            "name"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "person_type_code": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "enum": [
+                "F",
+                "J",
+                null
+              ]
+            },
+            "tax_id": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "name": {
+              "type": "string",
+              "maxLength": 120
+            },
+            "telephone": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "electronic_mail": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "contact_persons": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "administrative_centres": {
+              "type": [
+                "array",
+                "null"
+              ],
+              "items": {
+                "type": "object",
+                "required": [
+                  "centre_code"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "centre_code": {
+                    "type": "string"
+                  },
+                  "role_type_code": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "centre_description": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                }
+              }
+            },
+            "electronic_address": {
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "$ref": "#/definitions/electronic_address"
+                }
+              ],
+              "description": "DirecciÃƒÂ³n electrÃƒÂ³nica interoperable de la parte."
+            },
+            "identifiers": {
+              "type": [
+                "array",
+                "null"
+              ],
+              "items": {
+                "$ref": "#/definitions/party_identifier"
+              },
+              "description": "Identificadores adicionales tipados de la parte."
+            },
+            "party_country_code": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "PaÃƒÂ­s principal de la parte, distinto del paÃƒÂ­s de una direcciÃƒÂ³n concreta."
+            },
+            "person": {
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "$ref": "#/definitions/person_party"
+                }
+              ],
+              "description": "Bloque estructurado para persona fÃƒÂ­sica."
+            },
+            "company": {
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "$ref": "#/definitions/company_party"
+                }
+              ],
+              "description": "Bloque estructurado para persona jurÃƒÂ­dica."
+            },
+            "country_code": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Código ISO 3166-1 alpha-2 del país de la parte, normalizado por el validador."
+            }
+          }
+        },
+        "header": {
+          "type": "object",
+          "required": [
+            "invoice_series_code",
+            "invoice_type_code"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "invoice_number": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 60,
+              "description": "NÃƒÂºmero de factura. Obligatorio salvo en borradores (draft=true); en ese caso puede omitirse si se proporciona meta.external_ref para deduplicaciÃƒÂ³n."
+            },
+            "invoice_series_code": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 60
+            },
+            "corrective": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "invoice_number": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "invoice_series_code": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "reason_code": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "reason_description": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "tax_period": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "start_date": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "format": "date"
+                    },
+                    "end_date": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "format": "date"
+                    }
+                  }
+                },
+                "correction_type": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "enum": [
+                    "D",
+                    "S",
+                    null
+                  ]
+                },
+                "corrected_taxable_base": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "corrected_tax_amount": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "invoice_issue_date": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "date"
+                }
+              }
+            },
+            "invoice_type_code": {
+              "type": "string",
+              "enum": [
+                "01",
+                "02",
+                "03",
+                "04",
+                "05"
+              ],
+              "description": "CÃƒÂ³digo de tipo documental normalizado."
+            },
+            "is_simplified": {
+              "type": [
+                "boolean",
+                "null"
+              ],
+              "description": "Flag derivado de catalog.invoice_type_codes.is_simplified para compatibilidad de mapeos."
+            },
+            "is_corrective": {
+              "type": [
+                "boolean",
+                "null"
+              ],
+              "description": "Flag derivado de catalog.invoice_type_codes.is_corrective para compatibilidad de mapeos."
+            },
+            "references": {
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "$ref": "#/definitions/header_references"
+                }
+              ],
+              "description": "Referencias documentales de cabecera conservando la semÃƒÂ¡ntica FacturaE."
+            }
+          }
+        },
+        "issue_data": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "issue_date": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "date"
+            },
+            "receipt_date": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "date"
+            },
+            "operation_date": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "date"
+            },
+            "invoicing_period_start_date": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "date"
+            },
+            "invoicing_period_end_date": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "date"
+            },
+            "tax_currency_code": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "tax_country_code": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "is_tai": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "invoice_description": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 500
+            },
+            "tax_group_code": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "RÃƒÂ©gimen de impuesto indirecto: IVA, IGIC, IPSI"
+            },
+            "invoice_currency": {
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "$ref": "#/definitions/invoice_currency_context"
+                }
+              ],
+              "description": "Contexto de moneda original del documento cuando difiere de tax_currency_code."
+            }
+          }
+        },
+        "tax_included": {
+          "type": "boolean"
+        },
+        "taxes_outputs": {
+          "type": "array",
+          "minItems": 0,
+          "items": {
+            "type": "object",
+            "required": [
+              "tax_rate",
+              "taxable_base",
+              "tax_amount",
+              "tax_category_code"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "tax_type_code": {
+                "type": "string"
+              },
+              "tax_rate": {
+                "type": "number"
+              },
+              "taxable_base": {
+                "type": "number"
+              },
+              "tax_amount": {
+                "type": "number"
+              },
+              "equivalence_surcharge": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "equivalence_surcharge_amount": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "reverse_charge": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "tax_treatment_code": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "taxable": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "exempt": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "exemption_reason_code": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "exemption_reason_text": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "tax_regime_key": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "tax_regime_description": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "tax_category_code": {
+                "type": "string",
+                "enum": [
+                  "S",
+                  "Z",
+                  "E",
+                  "AE",
+                  "K",
+                  "G",
+                  "O",
+                  "L",
+                  "M"
+                ],
+                "description": "CategorÃƒÂ­a fiscal normalizada para interoperabilidad EN 16931."
+              },
+              "invoice_currency": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/definitions/taxes_outputs_invoice_currency"
+                  }
+                ],
+                "description": "Importes originales del bloque fiscal en invoice_currency_code."
+              }
+            }
+          }
+        },
+        "taxes_withheld": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "tax_rate",
+              "taxable_base",
+              "tax_amount"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "tax_type_code": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "tax_rate": {
+                "type": "number"
+              },
+              "taxable_base": {
+                "type": "number"
+              },
+              "tax_amount": {
+                "type": "number"
+              }
+            }
+          }
+        },
+        "totals": {
+          "type": "object",
+          "required": [
+            "total_gross_amount_before_taxes",
+            "total_tax_outputs",
+            "invoice_total"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "total_gross_amount": {
+              "type": "number"
+            },
+            "general_discounts": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "discount_reason": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "discount_rate": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "discount_amount": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  }
+                }
+              }
+            },
+            "general_surcharges": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "charge_reason": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "charge_rate": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "charge_amount": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  }
+                }
+              }
+            },
+            "total_general_discounts": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "total_general_surcharges": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "total_gross_amount_before_taxes": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "total_tax_outputs": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "total_taxes_withheld": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "invoice_total": {
+              "type": "number"
+            },
+            "payments_on_account": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "payment_on_account_date",
+                  "payment_on_account_amount"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "payment_on_account_date": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "payment_on_account_amount": {
+                    "type": "number"
+                  }
+                }
+              }
+            },
+            "reimbursable_expenses": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "issue_date": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "format": "date"
+                  },
+                  "invoice_number": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "invoice_series_code": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "reimbursable_expenses_amount": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  }
+                }
+              }
+            },
+            "total_payments_on_account": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "total_reimbursable_expenses": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "total_executable_amount": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "rounding_amount": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "description": "Ajuste de redondeo opcional para absorber diferencias legÃƒÂ­timas entre suma de componentes y total final, especialmente en importaciones externas."
+            },
+            "invoice_currency": {
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "$ref": "#/definitions/totals_invoice_currency"
+                }
+              ],
+              "description": "Importes originales del documento en invoice_currency_code."
+            }
+          }
+        },
+        "lines": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "oneOf": [
+              {
+                "$ref": "#/definitions/line_without_tax"
+              },
+              {
+                "$ref": "#/definitions/line_with_tax"
+              }
+            ]
+          }
+        },
+        "payment_terms": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "payment_details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "installment_due_date": {
+                "type": "string",
+                "format": "date"
+              },
+              "installment_amount": {
+                "type": "number"
+              },
+              "payment_method_code": {
+                "type": "string",
+                "pattern": "^[0-9]{2}$"
+              },
+              "payment_method_label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "iban_account_to_be_credited": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "iban_account_to_be_debited": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "payment_reconciliation_reference": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "collection_additional_information": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          }
+        },
+        "legal_literals": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "legal_reference"
+            ],
+            "properties": {
+              "code": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "legal_reference": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "additional_data": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "related_invoice": {
+              "type": [
+                "object",
+                "null"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "number": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "series": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "issue_date": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "date"
+                }
+              }
+            },
+            "invoice_additional_information": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "line_base": {
+      "type": "object",
+      "required": [
+        "item_description",
+        "quantity",
+        "tax_category_code"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "sequence_number": {
+          "type": "integer"
+        },
+        "item_type": {
+          "type": "string",
+          "enum": [
+            "goods",
+            "service"
+          ]
+        },
+        "item_description": {
+          "type": "string"
+        },
+        "quantity": {
+          "type": "number"
+        },
+        "unit_of_measure": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "unit_price_without_tax": {
+          "type": "number"
+        },
+        "unit_price_with_tax": {
+          "type": "number"
+        },
+        "total_cost_without_tax": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "gross_amount_without_tax": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "total_cost_with_tax": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "gross_amount_with_tax": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "discount_rate": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "discount_amount": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "charge_rate": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "charge_amount": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "tax_output_code": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "tax_output_rate": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "tax_output_base": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "tax_output_amount": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "tax_withheld_code": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "tax_withheld_rate": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "tax_withheld_base": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "tax_withheld_amount": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "reverse_charge": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "tax_treatment_code": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "taxable": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "exempt": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "exemption_reason_code": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "exemption_reason_text": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "tax_regime_key": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "tax_regime_description": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "line_item_period_start_date": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date"
+        },
+        "line_item_period_end_date": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date"
+        },
+        "transaction_date": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date"
+        },
+        "additional_line_item_information": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "article_code": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "tax_category_code": {
+          "type": "string",
+          "enum": [
+            "S",
+            "Z",
+            "E",
+            "AE",
+            "K",
+            "G",
+            "O",
+            "L",
+            "M"
+          ],
+          "description": "CategorÃƒÂ­a fiscal normalizada para interoperabilidad EN 16931."
+        },
+        "references": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/definitions/line_references"
+            }
+          ],
+          "description": "Referencias documentales de lÃƒÂ­nea conservando la semÃƒÂ¡ntica FacturaE."
+        },
+        "invoice_currency": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/definitions/line_invoice_currency"
+            }
+          ],
+          "description": "Importes originales de lÃƒÂ­nea en invoice_currency_code."
+        },
+        "legal_literals": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "legal_reference"
+            ],
+            "properties": {
+              "code": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "legal_reference": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "line_without_tax": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/line_base"
+        },
+        {
+          "required": [
+            "unit_price_without_tax"
+          ],
+          "not": {
+            "required": [
+              "unit_price_with_tax"
+            ]
+          }
+        }
+      ]
+    },
+    "line_with_tax": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/line_base"
+        },
+        {
+          "required": [
+            "unit_price_with_tax"
+          ],
+          "not": {
+            "required": [
+              "unit_price_without_tax"
+            ]
+          }
+        }
+      ]
+    },
+    "electronic_address": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value",
+        "scheme_id"
+      ],
+      "properties": {
+        "value": {
+          "type": "string",
+          "description": "Identificador electrÃƒÂ³nico de direccionamiento/intercambio de la parte."
+        },
+        "scheme_id": {
+          "type": "string",
+          "pattern": "^[0-9]{4}$",
+          "description": "CÃƒÂ³digo EAS de 4 dÃƒÂ­gitos. La validez concreta se comprueba contra catalog.electronic_address_schemes."
+        }
+      }
+    },
+    "party_identifier": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "role",
+        "value",
+        "scheme_id"
+      ],
+      "properties": {
+        "role": {
+          "type": "string",
+          "enum": [
+            "tax",
+            "vat",
+            "legal",
+            "local",
+            "other"
+          ],
+          "description": "Rol semÃƒÂ¡ntico del identificador."
+        },
+        "value": {
+          "type": "string",
+          "description": "Valor del identificador."
+        },
+        "scheme_id": {
+          "type": "string",
+          "enum": [
+            "ES:VAT",
+            "ES:NIF",
+            "EU:VAT",
+            "GLN",
+            "DUNS",
+            "VF:SUPPLIER",
+            "VF:CUSTOMER",
+            "LOCAL:ERP",
+            "LOCAL:CRM",
+            "OTHER"
+          ],
+          "description": "Esquema del identificador segÃƒÂºn catÃƒÂ¡logo cerrado soportado por el canÃƒÂ³nico 1.1."
+        },
+        "scheme_name": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Nombre legible del esquema."
+        },
+        "issuer_country_code": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "CÃƒÂ³digo ISO del paÃƒÂ­s emisor del identificador, si aplica."
+        }
+      }
+    },
+    "address": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "address": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "address_2": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "post_code": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "town": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "country_subdivision": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/definitions/country_subdivision"
+            }
+          ]
+        },
+        "country_code": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "person_party": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "first_name": {
+          "type": "string"
+        },
+        "first_surname": {
+          "type": "string"
+        },
+        "second_surname": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "address": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/definitions/address"
+            }
+          ]
+        }
+      }
+    },
+    "company_party": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "legal_name": {
+          "type": "string"
+        },
+        "trade_name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "address": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/definitions/address"
+            }
+          ]
+        }
+      }
+    },
+    "header_references": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "receiver_transaction_reference": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "file_reference": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "receiver_contract_reference": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "delivery_note_reference": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "number": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "date": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date"
+        }
+      }
+    },
+    "line_references": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "issuer_contract_reference": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "issuer_contract_date": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date"
+        },
+        "receiver_contract_reference": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "receiver_transaction_reference": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "file_reference": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "delivery_notes": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/definitions/delivery_note_reference"
+          }
+        }
+      }
+    },
+    "country_subdivision": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "subdivision_type": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "province",
+            "state",
+            "region",
+            "autonomous_community",
+            "department",
+            "county",
+            "other",
+            null
+          ]
+        }
+      }
+    },
+    "invoice_currency_context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "invoice_currency_code",
+        "exchange_rate",
+        "exchange_rate_date"
+      ],
+      "properties": {
+        "invoice_currency_code": {
+          "type": "string"
+        },
+        "exchange_rate": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "exchange_rate_date": {
+          "type": "string",
+          "format": "date"
+        }
+      }
+    },
+    "totals_invoice_currency": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "total_gross_amount": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "total_general_discounts": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "total_general_surcharges": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "total_gross_amount_before_taxes": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "total_tax_outputs": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "invoice_total": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "rounding_amount": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      }
+    },
+    "taxes_outputs_invoice_currency": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "taxable_base": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "tax_amount": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "equivalence_surcharge_amount": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      }
+    },
+    "line_invoice_currency": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "unit_price_without_tax": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "unit_price_with_tax": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "total_cost_without_tax": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "gross_amount_without_tax": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "total_cost_with_tax": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "gross_amount_with_tax": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "discount_amount": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "charge_amount": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "tax_output_base": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "tax_output_amount": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      }
+    }
+  }
+}

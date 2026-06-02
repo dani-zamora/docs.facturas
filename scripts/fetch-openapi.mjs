@@ -17,7 +17,6 @@ const ALLOWED_TAGS = new Set([
   'Invoices FacturaE',
   'Invoices UBL',
   'Invoices PDF',
-  'Invoices Excel Import',
   'Invoice Documents',
   'Invoice Events',
   'invoice-series',
