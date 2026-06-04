@@ -9,7 +9,7 @@ title: Facturas recibidas
 
 ## Ingesta
 
-`POST /api/v1/companies/{id}/invoices/received/canonical`
+`PUT /api/v1.1/received-invoices`
 
 ## OCR y reconocimiento automático
 

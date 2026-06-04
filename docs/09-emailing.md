@@ -9,7 +9,7 @@ title: Emailing
 
 ## Envío individual
 
-`POST /api/v1/companies/{id}/invoices/{invoice_id}/send`
+No hay endpoint publico v1.1 de envio individual por email. Usa la referencia API para la superficie disponible.
 
 Con override de email destino opcional.
 

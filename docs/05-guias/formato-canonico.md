@@ -31,13 +31,14 @@ Campos desconocidos a nivel raíz son rechazados (`additionalProperties: false`)
 
 ## Modos de ingesta
 
-El endpoint `POST /api/v1/companies/{company_public_id}/invoices/canonical` acepta el parámetro de query `action`:
+La API publica v1.1 separa los modos de ingesta por recurso:
 
 | Modo | Cuándo usarlo |
 |---|---|
-| `save` | Guardar un borrador. No asigna número ni fecha. |
-| `issue` | Emitir ahora. El sistema asigna número y fecha automáticamente. |
-| `import` | Registrar una factura ya emitida fuera del sistema. |
+| `PUT /api/v1.1/drafts` | Guardar un borrador. No asigna numero ni fecha. |
+| `POST /api/v1.1/issued-invoices/{invoice_id}/issue` | Emitir un borrador. El sistema asigna numero y fecha automaticamente. |
+| `POST /api/v1.1/issued-invoices/import` | Registrar una factura ya emitida fuera del sistema. |
+| `PUT /api/v1.1/received-invoices` | Insertar o actualizar una factura recibida canonica. |
 
 ### Diferencias entre modos
 

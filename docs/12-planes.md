@@ -15,7 +15,7 @@ _Tabla de planes próximamente._
 
 Facturas/mes (emitidas + recibidas) y usuarios/empresa. Al superar el límite: `402` (cuota) o `429` (rate limit).
 
-Consultar uso: `GET /api/v1/companies/{id}/subscription`
+La consulta de uso y suscripcion no forma parte de la superficie publica v1.1.
 
 ## Suscripción self-service
 

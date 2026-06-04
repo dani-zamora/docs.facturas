@@ -11,15 +11,15 @@ Crear, validar, editar y emitir borradores de factura.
 
 ## Crear un borrador
 
-`POST /api/v1/companies/{id}/invoices/canonical?action=save`
+`PUT /api/v1.1/drafts`
 
 ## Validar
 
-`POST /api/v1/companies/{id}/invoices/canonical?action=validate` o `/validate`
+`POST /api/v1.1/drafts/validate` o `POST /api/v1.1/drafts/{invoice_id}/validate`
 
 ## Emitir
 
-`action=issue` / `/issue`
+`POST /api/v1.1/issued-invoices/{invoice_id}/issue`
 
 ## Eliminar
 

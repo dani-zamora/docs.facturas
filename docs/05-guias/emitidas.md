@@ -11,7 +11,7 @@ title: Facturas emitidas
 
 ## Cancelación
 
-`POST /api/v1/companies/{id}/invoices/{invoice_id}/cancel`
+`POST /api/v1.1/issued-invoices/{invoice_id}/cancel`
 
 ## Facturas rectificativas
 

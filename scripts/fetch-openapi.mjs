@@ -1,87 +1,89 @@
 #!/usr/bin/env node
-// Descarga el openapi.json de la API, filtra tags internos y guarda en static/openapi.json
+// Descarga el openapi.json de la API, expone solo la fachada publica v1.1
+// y guarda el resultado en static/openapi.json.
 import { writeFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 const API_BASE = process.env.API_BASE ?? 'http://127.0.0.1:8000';
+const PUBLIC_PREFIX = '/api/v1.1';
 const outPath = join(dirname(fileURLToPath(import.meta.url)), '..', 'static', 'openapi.json');
 
-// Únicos tags que aparecen en la referencia pública
-const ALLOWED_TAGS = new Set([
-  'invoices',
-  'invoices-batch',
-  'invoices-bulk-issue',
-  'invoices-bulk-send',
-  'invoices-send',
-  'Invoices FacturaE',
-  'Invoices UBL',
-  'Invoices PDF',
-  'Invoice Documents',
-  'Invoice Events',
-  'invoice-series',
-  'sii',
-  'verifactu',
-  'companies',
-]);
+function isPublicV11Path(path) {
+  return path === PUBLIC_PREFIX || path.startsWith(`${PUBLIC_PREFIX}/`);
+}
 
-// Tags de companies que se exponen (solo lectura — no CRUD completo)
-const COMPANIES_ALLOWED_OPERATION_IDS = null; // null = todos los de companies por ahora
+function isPublicOperation(operation) {
+  return (operation.tags ?? []).some(
+    tag => typeof tag === 'string' && tag.startsWith('public:'),
+  );
+}
+
+function withoutInternalSecurity(operation) {
+  if (!operation.security) return operation;
+
+  const security = operation.security
+    .map(entry => {
+      const copy = { ...entry };
+      delete copy.HTTPBearer;
+      return copy;
+    })
+    .filter(entry => Object.keys(entry).length > 0);
+
+  return { ...operation, security };
+}
 
 function filterSpec(spec) {
-  // 1. Filtrar paths: solo los que tengan al menos una operación con tag permitido
   const filteredPaths = {};
+
   for (const [path, pathItem] of Object.entries(spec.paths ?? {})) {
+    if (!isPublicV11Path(path)) continue;
+
     const filteredMethods = {};
     for (const [method, operation] of Object.entries(pathItem)) {
-      if (method === 'parameters') { filteredMethods[method] = operation; continue; }
-      const tags = operation.tags ?? [];
-      // Para companies: solo lectura
-      if (tags.includes('companies')) {
-        if (method !== 'get') continue;
-      }
-      // Para invoice-series: solo lectura
-      if (tags.includes('invoice-series')) {
-        if (method !== 'get') continue;
-      }
-      if (tags.some(t => ALLOWED_TAGS.has(t))) {
+      if (method === 'parameters') {
         filteredMethods[method] = operation;
+        continue;
+      }
+      if (isPublicOperation(operation)) {
+        filteredMethods[method] = withoutInternalSecurity(operation);
       }
     }
-    // Solo incluir el path si quedó algún método real
-    const hasMethods = Object.keys(filteredMethods).some(k => k !== 'parameters');
+
+    const hasMethods = Object.keys(filteredMethods).some(key => key !== 'parameters');
     if (hasMethods) filteredPaths[path] = filteredMethods;
   }
 
-  // 2. Filtrar la lista de tags del spec raíz
-  const filteredTags = (spec.tags ?? []).filter(t => ALLOWED_TAGS.has(t.name));
+  const filteredTags = (spec.tags ?? []).filter(
+    tag => typeof tag.name === 'string' && tag.name.startsWith('public:'),
+  );
 
-  // 3. Eliminar HTTPBearer de securitySchemes
   const securitySchemes = { ...((spec.components ?? {}).securitySchemes ?? {}) };
   delete securitySchemes.HTTPBearer;
   const components = { ...(spec.components ?? {}), securitySchemes };
 
-  // 4. Eliminar HTTPBearer de security de cada operación
-  for (const pathItem of Object.values(filteredPaths)) {
-    for (const [method, operation] of Object.entries(pathItem)) {
-      if (method === 'parameters' || !operation.security) continue;
-      operation.security = operation.security
-        .map(s => { const c = { ...s }; delete c.HTTPBearer; return c; })
-        .filter(s => Object.keys(s).length > 0);
-    }
-  }
-
-  // 5. Eliminar HTTPBearer del security global si existe
-  const globalSecurity = (spec.security ?? [])
-    .map(s => { const c = { ...s }; delete c.HTTPBearer; return c; })
-    .filter(s => Object.keys(s).length > 0);
+  const security = (spec.security ?? [])
+    .map(entry => {
+      const copy = { ...entry };
+      delete copy.HTTPBearer;
+      return copy;
+    })
+    .filter(entry => Object.keys(entry).length > 0);
 
   const servers = [
-    { url: 'https://api.facturas.app', description: 'Producción' },
+    { url: 'https://api.facturas.app', description: 'Produccion' },
     { url: 'https://sandbox.api.facturas.app', description: 'Sandbox' },
   ];
 
-  return { ...spec, servers, paths: filteredPaths, tags: filteredTags, components, security: globalSecurity };
+  return {
+    ...spec,
+    info: { ...(spec.info ?? {}), title: 'Facturas API v1.1', version: '1.1' },
+    servers,
+    paths: filteredPaths,
+    tags: filteredTags,
+    components,
+    security,
+  };
 }
 
 const res = await fetch(`${API_BASE}/openapi.json`);
@@ -93,5 +95,5 @@ const filtered = filterSpec(raw);
 const pathCount = Object.keys(filtered.paths).length;
 const rawCount = Object.keys(raw.paths ?? {}).length;
 writeFileSync(outPath, JSON.stringify(filtered, null, 2));
-console.log(`openapi.json actualizado desde ${API_BASE} → static/openapi.json`);
-console.log(`Paths: ${rawCount} totales → ${pathCount} públicos`);
+console.log(`openapi.json actualizado desde ${API_BASE} -> static/openapi.json`);
+console.log(`Paths: ${rawCount} totales -> ${pathCount} publicos v1.1`);

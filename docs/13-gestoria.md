@@ -9,7 +9,7 @@ title: Integración para gestorías y software vendors
 
 ## Modelo multi-empresa
 
-Un tenant gestiona N empresas. Alta por API (`POST /api/v1/companies`) y listado (`GET /api/v1/companies`).
+Un tenant gestiona N empresas. En v1.1 puedes consultar las empresas accesibles con `GET /api/v1.1/companies`.
 
 ## Aprovisionamiento automático
 

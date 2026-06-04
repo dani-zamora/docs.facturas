@@ -9,7 +9,7 @@ El historial de cambios está en la sección **[Changelog](/changelog)**.
 
 ## Política de versionado
 
-La API sigue `/api/v1`. Los cambios que rompen contrato se publican en una ruta paralela o en `/api/v2` con un período de deprecación.
+La documentacion publica expone solo `/api/v1.1`. Los cambios que rompen contrato se publican en una ruta paralela, por ejemplo `/api/v2`, con un periodo de deprecacion.
 
 ## Compatibilidad hacia atrás
 

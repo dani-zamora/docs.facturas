@@ -9,7 +9,7 @@ title: Primeros pasos
 
 ## Alta
 
-Crear cuenta → tenant → empresa (`POST /api/v1/companies`).
+La API publica v1.1 opera sobre la empresa asociada a la API key. Consulta la empresa activa con `GET /api/v1.1/company`.
 
 ## Generar una API key
 
