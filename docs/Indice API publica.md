@@ -52,5 +52,10 @@ Verifactu.
 - QR VeriFactu de una factura.
 
 - Listar envíos a VeriFactu.
-
 - Listado incidencias VeriFactu.
+
+
+- Emitir evento SIF (inicio o fin) 
+- Lista eventos SIF
+
+- Get XML respuesta AEAT
