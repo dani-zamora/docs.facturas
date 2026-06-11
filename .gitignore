@@ -1,13 +1,16 @@
 # Dependencies
 /node_modules
 
-# Production
-/build
+# Next.js
+/.next/
+/out/
+
+# Fumadocs (generado)
+/.source/
+next-env.d.ts
 
 # Generated files
-.docusaurus
-.cache-loader
-static/openapi.json
+/public/openapi.json
 
 # Misc
 .DS_Store

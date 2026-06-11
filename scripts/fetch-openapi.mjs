@@ -7,7 +7,7 @@ import { fileURLToPath } from 'url';
 
 const API_BASE = process.env.API_BASE ?? 'http://127.0.0.1:8000';
 const PUBLIC_PREFIX = '/api/v1.1';
-const outPath = join(dirname(fileURLToPath(import.meta.url)), '..', 'static', 'openapi.json');
+const outPath = join(dirname(fileURLToPath(import.meta.url)), '..', 'public', 'openapi.json');
 
 function isPublicV11Path(path) {
   return path === PUBLIC_PREFIX || path.startsWith(`${PUBLIC_PREFIX}/`);
