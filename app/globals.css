@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400..700;1,400..600&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap');
 @import "tailwindcss";
 @import "fumadocs-ui/style.css";
 
@@ -41,9 +40,9 @@
 @theme inline {
   --color-background: var(--ui-bg-app);
   --color-foreground: var(--ui-text-primary);
-  --font-sans: "Hanken Grotesk", "Segoe UI", Arial, sans-serif;
-  --font-serif: "EB Garamond", Georgia, serif;
-  --font-mono: "JetBrains Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+  --font-sans: var(--font-hanken), "Segoe UI", Arial, sans-serif;
+  --font-serif: var(--font-eb-garamond), Georgia, serif;
+  --font-mono: var(--font-jetbrains), "SFMono-Regular", Menlo, Consolas, monospace;
 }
 
 /* Editorial sharp: sin border-radius */
@@ -70,7 +69,7 @@ body {
   margin: 0;
   background: var(--ui-bg-app);
   color: var(--ui-text-primary);
-  font-family: "Hanken Grotesk", "Segoe UI", Arial, sans-serif;
+  font-family: var(--font-sans);
   font-size: 1rem;
   line-height: 1.5rem;
   -webkit-font-smoothing: antialiased;
@@ -84,7 +83,7 @@ body {
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: "EB Garamond", Georgia, serif;
+    font-family: var(--font-serif);
   }
 
   :focus-visible {
@@ -96,7 +95,7 @@ body {
 code,
 pre,
 .mono {
-  font-family: "JetBrains Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+  font-family: var(--font-mono);
 }
 
 ::selection {
